@@ -390,6 +390,29 @@ public sealed class FocusWorkspaceService(IDbContextFactory<FocusOnTaskDbContext
         }
     }
 
+    public async Task DeleteTaskAsync(int taskId)
+    {
+        await EnsureInitializedAsync();
+        await _gate.WaitAsync();
+
+        try
+        {
+            await using var db = await dbContextFactory.CreateDbContextAsync();
+            var task = await db.Tasks.SingleOrDefaultAsync(item => item.Id == taskId);
+            if (task is null)
+            {
+                return;
+            }
+
+            db.Tasks.Remove(task);
+            await db.SaveChangesAsync();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     private async Task EnsureInitializedAsync()
     {
         Task initializationTask;

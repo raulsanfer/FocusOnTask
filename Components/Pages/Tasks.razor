@@ -1,5 +1,6 @@
 @page "/tasks"
 @inject FocusWorkspaceService WorkspaceService
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Tasks</PageTitle>
 
@@ -101,6 +102,7 @@
                                     {
                                         <button class="mini-button ghost" @onclick="() => CompleteTaskAsync(task.Id)">Finalizar</button>
                                     }
+                                    <button class="mini-button ghost" type="button" @onclick="() => DeleteTaskAsync(task.Id, task.Title)">Eliminar</button>
                                 </div>
                             </td>
                         </tr>
@@ -164,6 +166,19 @@
     {
         await WorkspaceService.CompleteTaskAsync(taskId);
         _feedback = "Tarea finalizada.";
+        await LoadAsync();
+    }
+
+    private async Task DeleteTaskAsync(int taskId, string taskTitle)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Se eliminara permanentemente la tarea \"{taskTitle}\". Esta accion no se puede deshacer. ¿Quieres continuar?");
+        if (!confirmed)
+        {
+            return;
+        }
+
+        await WorkspaceService.DeleteTaskAsync(taskId);
+        _feedback = "Tarea eliminada permanentemente.";
         await LoadAsync();
     }
 }
