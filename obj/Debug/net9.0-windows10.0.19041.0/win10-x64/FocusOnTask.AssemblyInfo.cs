@@ -17,7 +17,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FocusOnTask")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0+4d93cf467e7de8026cb219aba6476be3f147c0c1")]
 [assembly: System.Reflection.AssemblyProductAttribute("FocusOnTask")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FocusOnTask")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

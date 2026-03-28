@@ -1,0 +1,65 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+artifacts/
+publish/
+TestResults/
+AppPackages/
+BundleArtifacts/
+
+# IDE and editor folders
+.vs/
+.vscode/
+.idea/
+.history/
+
+# Visual Studio / .NET user files
+*.suo
+*.user
+*.userosscache
+*.rsuser
+*.sln.docstates
+
+# Local SDK and package caches
+.dotnet/
+.nuget/
+packages/
+*.nupkg
+*.snupkg
+
+# MAUI / mobile packaging artifacts
+*.apk
+*.aab
+*.ap_
+*.ipa
+*.msix
+*.msixbundle
+*.appx
+*.appxbundle
+*.appxupload
+*.dSYM
+*.dSYM.zip
+
+# Signing keys and local certificates
+*.pfx
+*.p12
+*.jks
+*.keystore
+*.mobileprovision
+
+# Local databases and temp files
+*.db-shm
+*.db-wal
+*.tmp
+*.temp
+*.cache
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Template engine cache
+.templateengine/
