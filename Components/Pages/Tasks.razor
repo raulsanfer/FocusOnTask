@@ -17,7 +17,7 @@
     <div class="banner">@_feedback</div>
 }
 
-<section class="management-grid">
+<section class="management-grid tasks-layout">
     <article class="glass-panel form-panel">
         <div class="section-heading">
             <div>
@@ -26,16 +26,17 @@
             </div>
         </div>
 
-        <EditForm Model="_taskDraft" OnValidSubmit="CreateTaskAsync">
+        <EditForm class="quick-task-form" Model="_taskDraft" OnValidSubmit="CreateTaskAsync">
             <DataAnnotationsValidator />
-            <ValidationSummary />
+            <div class="quick-task-main">
+                <ValidationSummary />
 
-            <div class="field-grid">
-                <label class="field-span">
+                <div class="field-grid quick-task-fields">
+                    <label class="task-title-field">
                     <span>Título</span>
                     <InputText @bind-Value="_taskDraft.Title" />
-                </label>
-                <label>
+                    </label>
+                    <label>
                     <span>Proyecto</span>
                     <InputSelect @bind-Value="_taskDraft.ProjectId">
                         <option value="">Sin proyecto</option>
@@ -44,26 +45,63 @@
                             <option value="@project.Id">@project.Name</option>
                         }
                     </InputSelect>
-                </label>
-                <label>
+                    </label>
+                    <label>
                     <span>Estimación (horas)</span>
                     <InputNumber @bind-Value="_taskDraft.EstimationHours" />
-                </label>
-                <label class="toggle-field">
+                    </label>
+                    <label class="toggle-field">
                     <InputCheckbox @bind-Value="_taskDraft.AttachToActiveSession" />
                     <span>Adjuntar a la sesión activa si existe</span>
-                </label>
+                    </label>
+                </div>
             </div>
 
-            <button class="primary-button" type="submit">Guardar tarea</button>
+            <button class="primary-button quick-task-submit" type="submit">Guardar tarea</button>
         </EditForm>
     </article>
 
     <article class="glass-panel section-card">
+        @{
+            var filteredTasks = FilteredTasks;
+        }
+
         <div class="section-heading">
             <div>
                 <p class="eyebrow">Listado</p>
                 <h2>Tareas registradas</h2>
+            </div>
+            <p class="section-meta">@filteredTasks.Count de @_tasks.Count tareas</p>
+        </div>
+
+        <div class="field-grid task-filters">
+            <label class="task-filter-search">
+                <span>Buscar por nombre</span>
+                <input @bind="_taskSearch" @bind:event="oninput" placeholder="Escribe parte del nombre" />
+            </label>
+            <label>
+                <span>Estado</span>
+                <InputSelect @bind-Value="_statusFilter">
+                    <option value="">Todos</option>
+                    @foreach (var status in AvailableStatuses)
+                    {
+                        <option value="@status">@status.ToDisplayName()</option>
+                    }
+                </InputSelect>
+            </label>
+            <label>
+                <span>Proyecto</span>
+                <InputSelect @bind-Value="_projectFilter">
+                    <option value="">Todos</option>
+                    <option value="@NoProjectFilterValue">Sin proyecto</option>
+                    @foreach (var project in _projects)
+                    {
+                        <option value="@project.Id.ToString()">@project.Name</option>
+                    }
+                </InputSelect>
+            </label>
+            <div class="task-filter-actions">
+                <button class="secondary-button" type="button" @onclick="ClearFilters">Limpiar filtros</button>
             </div>
         </div>
 
@@ -80,32 +118,41 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var task in _tasks)
+                    @if (filteredTasks.Count == 0)
                     {
                         <tr>
-                            <td>@task.Title</td>
-                            <td>@(task.Project?.Name ?? "Sin proyecto")</td>
-                            <td><span class="status-chip @task.Status.ToCssClass()">@task.Status.ToDisplayName()</span></td>
-                            <td>@task.EstimationHours.ToString("0.##") h</td>
-                            <td>@task.WorkedHours.ToString("0.##") h</td>
-                            <td>
-                                <div class="action-row">
-                                    @if (task.Status != TaskState.Completed)
-                                    {
-                                        <button class="mini-button" @onclick="() => StartTaskAsync(task.Id)">Iniciar</button>
-                                    }
-                                    @if (task.Status == TaskState.Started)
-                                    {
-                                        <button class="mini-button ghost" @onclick="() => PauseTaskAsync(task.Id)">Parar</button>
-                                    }
-                                    @if (task.Status != TaskState.Completed)
-                                    {
-                                        <button class="mini-button ghost" @onclick="() => CompleteTaskAsync(task.Id)">Finalizar</button>
-                                    }
-                                    <button class="mini-button ghost" type="button" @onclick="() => DeleteTaskAsync(task.Id, task.Title)">Eliminar</button>
-                                </div>
-                            </td>
+                            <td colspan="6" class="empty-table-cell">No hay tareas que coincidan con los filtros actuales.</td>
                         </tr>
+                    }
+                    else
+                    {
+                        @foreach (var task in filteredTasks)
+                        {
+                            <tr>
+                                <td>@task.Title</td>
+                                <td>@(task.Project?.Name ?? "Sin proyecto")</td>
+                                <td><span class="status-chip @task.Status.ToCssClass()">@task.Status.ToDisplayName()</span></td>
+                                <td>@task.EstimationHours.ToString("0.##") h</td>
+                                <td>@task.WorkedHours.ToString("0.##") h</td>
+                                <td>
+                                    <div class="action-row">
+                                        @if (task.Status != TaskState.Completed)
+                                        {
+                                            <button class="mini-button" @onclick="() => StartTaskAsync(task.Id)">Iniciar</button>
+                                        }
+                                        @if (task.Status == TaskState.Started)
+                                        {
+                                            <button class="mini-button ghost" @onclick="() => PauseTaskAsync(task.Id)">Parar</button>
+                                        }
+                                        @if (task.Status != TaskState.Completed)
+                                        {
+                                            <button class="mini-button ghost" @onclick="() => CompleteTaskAsync(task.Id)">Finalizar</button>
+                                        }
+                                        <button class="mini-button ghost" type="button" @onclick="() => DeleteTaskAsync(task.Id, task.Title)">Eliminar</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
                     }
                 </tbody>
             </table>
@@ -120,9 +167,26 @@
         AttachToActiveSession = true
     };
 
+    private const string NoProjectFilterValue = "__none__";
+
     private IReadOnlyList<Project> _projects = [];
     private IReadOnlyList<TaskItem> _tasks = [];
+    private string _taskSearch = string.Empty;
+    private TaskState? _statusFilter;
+    private string? _projectFilter;
     private string? _feedback;
+
+    private static IReadOnlyList<TaskState> AvailableStatuses { get; } = Enum.GetValues<TaskState>();
+
+    private IReadOnlyList<TaskItem> FilteredTasks =>
+        _tasks
+            .Where(task => string.IsNullOrWhiteSpace(_taskSearch)
+                || task.Title.Contains(_taskSearch.Trim(), StringComparison.OrdinalIgnoreCase))
+            .Where(task => !_statusFilter.HasValue || task.Status == _statusFilter.Value)
+            .Where(task => string.IsNullOrWhiteSpace(_projectFilter)
+                || (_projectFilter == NoProjectFilterValue && task.ProjectId is null)
+                || (_projectFilter != NoProjectFilterValue && task.ProjectId?.ToString() == _projectFilter))
+            .ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -180,5 +244,12 @@
         await WorkspaceService.DeleteTaskAsync(taskId);
         _feedback = "Tarea eliminada permanentemente.";
         await LoadAsync();
+    }
+
+    private void ClearFilters()
+    {
+        _taskSearch = string.Empty;
+        _statusFilter = null;
+        _projectFilter = null;
     }
 }

@@ -3,7 +3,6 @@ C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\scopedc
 C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\scopedcss\Components\Layout\NavMenu.razor.rz.scp.css
 C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\scopedcss\bundle\FocusOnTask.styles.css
 C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\scopedcss\projectbundle\FocusOnTask.bundle.scp.css
-C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\compressed\pccrkm3frt-s3hy78ku68.gz
 C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\compressed\wko3ts021x-6gzpyzhau4.gz
 C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\compressed\ct73h5fw2o-8inm30yfxf.gz
 C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\compressed\ak2sz22gy2-q9dwyzy8ek.gz
@@ -20,7 +19,6 @@ C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\staticw
 C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\staticwebassets.pack.json
 C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\compressed\publish\hf6jolz79y-56nxi11kpp.br
 C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\compressed\publish\2sxvzzkvkr-56nxi11kpp.br
-C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\compressed\publish\pccrkm3frt-s3hy78ku68.br
 C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\compressed\publish\wko3ts021x-6gzpyzhau4.br
 C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\compressed\publish\ct73h5fw2o-8inm30yfxf.br
 C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\compressed\publish\ak2sz22gy2-q9dwyzy8ek.br
@@ -546,3 +544,6 @@ C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\rjimswa
 C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\rjsmrazor.dswa.cache.json
 C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\rjsmcshtml.dswa.cache.json
 C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\staticwebassets.build.json.cache
+C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\FocusOnTask.sourcelink.json
+C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\compressed\pccrkm3frt-8vkw3xstqn.gz
+C:\Desarrollo\FocusOnTask\obj\Debug\net9.0-windows10.0.19041.0\win10-x64\compressed\publish\pccrkm3frt-8vkw3xstqn.br

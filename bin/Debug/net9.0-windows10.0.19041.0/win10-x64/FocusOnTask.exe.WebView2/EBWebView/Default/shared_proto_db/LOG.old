@@ -1,2 +1,3 @@
-2026/03/28-15:23:56.049 5788 Creating DB C:\Desarrollo\FocusOnTask\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\FocusOnTask.exe.WebView2\EBWebView\Default\shared_proto_db since it was missing.
-2026/03/28-15:23:56.063 5788 Reusing MANIFEST C:\Desarrollo\FocusOnTask\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\FocusOnTask.exe.WebView2\EBWebView\Default\shared_proto_db/MANIFEST-000001
+2026/03/28-20:32:10.472 4440 Reusing MANIFEST C:\Desarrollo\FocusOnTask\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\FocusOnTask.exe.WebView2\EBWebView\Default\shared_proto_db/MANIFEST-000001
+2026/03/28-20:32:10.474 4440 Recovering log #3
+2026/03/28-20:32:10.475 4440 Reusing old log C:\Desarrollo\FocusOnTask\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\FocusOnTask.exe.WebView2\EBWebView\Default\shared_proto_db/000003.log 
