@@ -1,0 +1,207 @@
+﻿@page "/"
+
+@inject FocusWorkspaceService WorkspaceService
+
+<PageTitle>Dashboard</PageTitle>
+
+@if (_isLoading)
+{
+    <section class="glass-panel section-card">
+        <h1>Preparando dashboard</h1>
+        <p>Cargando sesión activa, proyectos y tareas.</p>
+    </section>
+}
+else if (_snapshot is null)
+{
+    <section class="glass-panel section-card">
+        <h1>Sin datos</h1>
+        <p>No se pudo cargar la información principal.</p>
+    </section>
+}
+else
+{
+    <section class="hero-panel">
+        <div>
+            <p class="eyebrow">Dashboard</p>
+            <h1>Control diario del trabajo</h1>
+            <p class="hero-copy">
+                Unifica la jornada, el foco actual y el avance de proyectos en una sola vista.
+            </p>
+        </div>
+        <div class="hero-actions">
+            @if (_snapshot.ActiveSession is null)
+            {
+                <button class="primary-button" @onclick="StartSessionAsync">Iniciar jornada</button>
+            }
+            else
+            {
+                <button class="secondary-button" @onclick="StopSessionAsync">Cerrar jornada</button>
+            }
+        </div>
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(_feedback))
+    {
+        <div class="banner">@_feedback</div>
+    }
+
+    <section class="stats-grid">
+        <article class="metric-card">
+            <span class="metric-label">Projects</span>
+            <strong>@_snapshot.TotalProjects</strong>
+            <span>@_snapshot.ActiveProjects.Count proyectos visibles</span>
+        </article>
+        <article class="metric-card">
+            <span class="metric-label">Tasks abiertas</span>
+            <strong>@_snapshot.OpenTasks</strong>
+            <span>@_snapshot.CompletedTasks completadas</span>
+        </article>
+        <article class="metric-card">
+            <span class="metric-label">Estimación</span>
+            <strong>@_snapshot.EstimatedHours.ToString("0.##") h</strong>
+            <span>Planificadas en total</span>
+        </article>
+        <article class="metric-card">
+            <span class="metric-label">Trabajado</span>
+            <strong>@_snapshot.WorkedHours.ToString("0.##") h</strong>
+            <span>Acumuladas hasta ahora</span>
+        </article>
+    </section>
+
+    <section class="dashboard-grid">
+        <article class="glass-panel section-card">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">WorkSession</p>
+                    <h2>Sesión de hoy</h2>
+                </div>
+                <span class="status-chip @(_snapshot.ActiveSession is null ? "status-idle" : "status-live")">
+                    @(_snapshot.ActiveSession is null ? "Sin iniciar" : "Activa")
+                </span>
+            </div>
+
+            @if (_snapshot.ActiveSession is null)
+            {
+                <p class="muted-copy">
+                    La duración por defecto está configurada en @_snapshot.ConfiguredDurationHours.ToString("0.##") horas.
+                    Cuando abras una nueva jornada, si existe una tarea parada se preasignará automáticamente.
+                </p>
+            }
+            else
+            {
+                <div class="session-summary">
+                    <div>
+                        <span class="metric-label">Inicio</span>
+                        <strong>@_snapshot.ActiveSession.DateTimeStart.ToString("HH:mm")</strong>
+                    </div>
+                    <div>
+                        <span class="metric-label">Duración prevista</span>
+                        <strong>@_snapshot.ActiveSession.ExpectedDurationHours.ToString("0.##") h</strong>
+                    </div>
+                    <div>
+                        <span class="metric-label">Tarea en foco</span>
+                        <strong>@(_snapshot.ActiveTaskTitle ?? "Sin tarea activa")</strong>
+                    </div>
+                </div>
+            }
+
+            <div class="list-shell">
+                @foreach (var session in _snapshot.RecentSessions)
+                {
+                    <div class="list-row">
+                        <div>
+                            <strong>@session.DateTimeStart.ToString("dd MMM")</strong>
+                            <p>@session.DateTimeStart.ToString("HH:mm") - @(session.DateTimeEnd?.ToString("HH:mm") ?? "en curso")</p>
+                        </div>
+                        <div class="row-side">
+                            <span>@session.TotalWorkedHours.ToString("0.##") h</span>
+                            <small>@session.TaskCount tareas</small>
+                        </div>
+                    </div>
+                }
+            </div>
+        </article>
+
+        <article class="glass-panel section-card">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Focus queue</p>
+                    <h2>Tareas destacadas</h2>
+                </div>
+            </div>
+
+            <div class="list-shell">
+                @foreach (var task in _snapshot.FocusTasks)
+                {
+                    <div class="list-row">
+                        <div>
+                            <strong>@task.Title</strong>
+                            <p>@(task.ProjectName ?? "Sin proyecto")</p>
+                        </div>
+                        <div class="row-side">
+                            <span class="status-chip @task.Status.ToCssClass()">@task.Status.ToDisplayName()</span>
+                            <small>@task.WorkedHours.ToString("0.##") / @task.EstimationHours.ToString("0.##") h</small>
+                        </div>
+                    </div>
+                }
+            </div>
+        </article>
+
+        <article class="glass-panel section-card">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Projects</p>
+                    <h2>Actividad reciente</h2>
+                </div>
+            </div>
+
+            <div class="list-shell">
+                @foreach (var project in _snapshot.ActiveProjects)
+                {
+                    <div class="list-row">
+                        <div>
+                            <strong>@project.Name</strong>
+                            <p>@project.OpenTasks abiertas · @project.CompletedTasks finalizadas</p>
+                        </div>
+                        <div class="row-side">
+                            <span>@project.Progress.ToString("0")%</span>
+                            <small>avance</small>
+                        </div>
+                    </div>
+                }
+            </div>
+        </article>
+    </section>
+}
+
+@code {
+    private DashboardSnapshot? _snapshot;
+    private bool _isLoading = true;
+    private string? _feedback;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _isLoading = true;
+        _snapshot = await WorkspaceService.GetDashboardAsync();
+        _isLoading = false;
+    }
+
+    private async Task StartSessionAsync()
+    {
+        await WorkspaceService.StartWorkSessionAsync();
+        _feedback = "Nueva WorkSession iniciada.";
+        await LoadAsync();
+    }
+
+    private async Task StopSessionAsync()
+    {
+        await WorkspaceService.StopWorkSessionAsync();
+        _feedback = "WorkSession cerrada. Si había una tarea iniciada, ha quedado parada con el tiempo acumulado.";
+        await LoadAsync();
+    }
+}

@@ -1,0 +1,117 @@
+@page "/projects"
+@inject FocusWorkspaceService WorkspaceService
+
+<PageTitle>Projects</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Projects</p>
+        <h1>Estructura de trabajo</h1>
+        <p class="hero-copy">Agrupa tareas y visualiza qué proyectos siguen abiertos.</p>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(_feedback))
+{
+    <div class="banner">@_feedback</div>
+}
+
+<section class="management-grid">
+    <article class="glass-panel form-panel">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Nuevo proyecto</p>
+                <h2>Alta rápida</h2>
+            </div>
+        </div>
+
+        <EditForm Model="_projectDraft" OnValidSubmit="CreateProjectAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="field-grid">
+                <label>
+                    <span>Nombre</span>
+                    <InputText @bind-Value="_projectDraft.Name" />
+                </label>
+                <label>
+                    <span>Fecha de inicio</span>
+                    <InputDate @bind-Value="_projectDraft.DateStart" />
+                </label>
+                <label>
+                    <span>Fecha de fin</span>
+                    <InputDate @bind-Value="_projectDraft.DateEnd" />
+                </label>
+            </div>
+
+            <button class="primary-button" type="submit">Guardar proyecto</button>
+        </EditForm>
+    </article>
+
+    <article class="glass-panel section-card">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Listado</p>
+                <h2>Proyectos registrados</h2>
+            </div>
+        </div>
+
+        <div class="table-shell">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Inicio</th>
+                        <th>Fin</th>
+                        <th>Abiertas</th>
+                        <th>Finalizadas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var project in _projects)
+                    {
+                        <tr>
+                            <td>@project.Name</td>
+                            <td>@project.DateStart.ToString("dd/MM/yyyy")</td>
+                            <td>@(project.DateEnd?.ToString("dd/MM/yyyy") ?? "-")</td>
+                            <td>@project.Tasks.Count(task => task.Status != TaskState.Completed)</td>
+                            <td>@project.Tasks.Count(task => task.Status == TaskState.Completed)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
+
+@code {
+    private readonly ProjectDraft _projectDraft = new()
+    {
+        DateStart = DateTime.Today
+    };
+
+    private IReadOnlyList<Project> _projects = [];
+    private string? _feedback;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _projects = await WorkspaceService.GetProjectsAsync();
+    }
+
+    private async Task CreateProjectAsync()
+    {
+        await WorkspaceService.AddProjectAsync(_projectDraft);
+        _feedback = "Proyecto creado.";
+
+        _projectDraft.Name = string.Empty;
+        _projectDraft.DateStart = DateTime.Today;
+        _projectDraft.DateEnd = null;
+
+        await LoadAsync();
+    }
+}

@@ -1,0 +1,1 @@
+.NET Multi-platform App UI (.NET MAUI) is a cross-platform framework for creating native mobile and desktop apps with C# and XAML. This package contains additional graphics and drawing APIs for using the Win2D graphics engine with .NET MAUI Graphics. This package is no longer needed and all APIs are now also in the Microsoft.Maui.Graphics package.

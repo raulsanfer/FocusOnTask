@@ -1,0 +1,169 @@
+@page "/tasks"
+@inject FocusWorkspaceService WorkspaceService
+
+<PageTitle>Tasks</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Tasks</p>
+        <h1>Cola de trabajo</h1>
+        <p class="hero-copy">Crea tareas, asígnalas a proyectos y controla el estado real del trabajo.</p>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(_feedback))
+{
+    <div class="banner">@_feedback</div>
+}
+
+<section class="management-grid">
+    <article class="glass-panel form-panel">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Nueva tarea</p>
+                <h2>Captura rápida</h2>
+            </div>
+        </div>
+
+        <EditForm Model="_taskDraft" OnValidSubmit="CreateTaskAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="field-grid">
+                <label class="field-span">
+                    <span>Título</span>
+                    <InputText @bind-Value="_taskDraft.Title" />
+                </label>
+                <label>
+                    <span>Proyecto</span>
+                    <InputSelect @bind-Value="_taskDraft.ProjectId">
+                        <option value="">Sin proyecto</option>
+                        @foreach (var project in _projects)
+                        {
+                            <option value="@project.Id">@project.Name</option>
+                        }
+                    </InputSelect>
+                </label>
+                <label>
+                    <span>Estimación (horas)</span>
+                    <InputNumber @bind-Value="_taskDraft.EstimationHours" />
+                </label>
+                <label class="toggle-field">
+                    <InputCheckbox @bind-Value="_taskDraft.AttachToActiveSession" />
+                    <span>Adjuntar a la sesión activa si existe</span>
+                </label>
+            </div>
+
+            <button class="primary-button" type="submit">Guardar tarea</button>
+        </EditForm>
+    </article>
+
+    <article class="glass-panel section-card">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Listado</p>
+                <h2>Tareas registradas</h2>
+            </div>
+        </div>
+
+        <div class="table-shell">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Proyecto</th>
+                        <th>Estado</th>
+                        <th>Estimación</th>
+                        <th>Trabajado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var task in _tasks)
+                    {
+                        <tr>
+                            <td>@task.Title</td>
+                            <td>@(task.Project?.Name ?? "Sin proyecto")</td>
+                            <td><span class="status-chip @task.Status.ToCssClass()">@task.Status.ToDisplayName()</span></td>
+                            <td>@task.EstimationHours.ToString("0.##") h</td>
+                            <td>@task.WorkedHours.ToString("0.##") h</td>
+                            <td>
+                                <div class="action-row">
+                                    @if (task.Status != TaskState.Completed)
+                                    {
+                                        <button class="mini-button" @onclick="() => StartTaskAsync(task.Id)">Iniciar</button>
+                                    }
+                                    @if (task.Status == TaskState.Started)
+                                    {
+                                        <button class="mini-button ghost" @onclick="() => PauseTaskAsync(task.Id)">Parar</button>
+                                    }
+                                    @if (task.Status != TaskState.Completed)
+                                    {
+                                        <button class="mini-button ghost" @onclick="() => CompleteTaskAsync(task.Id)">Finalizar</button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
+
+@code {
+    private readonly TaskDraft _taskDraft = new()
+    {
+        EstimationHours = 1m,
+        AttachToActiveSession = true
+    };
+
+    private IReadOnlyList<Project> _projects = [];
+    private IReadOnlyList<TaskItem> _tasks = [];
+    private string? _feedback;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _projects = await WorkspaceService.GetProjectsAsync();
+        _tasks = await WorkspaceService.GetTasksAsync();
+    }
+
+    private async Task CreateTaskAsync()
+    {
+        await WorkspaceService.AddTaskAsync(_taskDraft);
+        _feedback = "Tarea creada.";
+
+        _taskDraft.Title = string.Empty;
+        _taskDraft.ProjectId = null;
+        _taskDraft.EstimationHours = 1m;
+        _taskDraft.AttachToActiveSession = true;
+
+        await LoadAsync();
+    }
+
+    private async Task StartTaskAsync(int taskId)
+    {
+        await WorkspaceService.StartTaskAsync(taskId);
+        _feedback = "Tarea iniciada.";
+        await LoadAsync();
+    }
+
+    private async Task PauseTaskAsync(int taskId)
+    {
+        await WorkspaceService.PauseTaskAsync(taskId);
+        _feedback = "Tarea parada.";
+        await LoadAsync();
+    }
+
+    private async Task CompleteTaskAsync(int taskId)
+    {
+        await WorkspaceService.CompleteTaskAsync(taskId);
+        _feedback = "Tarea finalizada.";
+        await LoadAsync();
+    }
+}

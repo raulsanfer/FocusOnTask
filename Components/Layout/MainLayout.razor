@@ -1,0 +1,24 @@
+﻿@inherits LayoutComponentBase
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main class="workspace">
+        <div class="top-row">
+            <div>
+                <p class="eyebrow">Productivity cockpit</p>
+                <h2>FocusOnTask</h2>
+            </div>
+            <div class="top-row-meta">
+                <span>@DateTime.Now.ToString("dddd, dd MMM yyyy")</span>
+                <span>Blazor Hybrid + SQLite</span>
+            </div>
+        </div>
+
+        <article class="content-shell">
+            @Body
+        </article>
+    </main>
+</div>

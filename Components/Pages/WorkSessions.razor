@@ -1,0 +1,127 @@
+@page "/work-sessions"
+@inject FocusWorkspaceService WorkspaceService
+
+<PageTitle>WorkSessions</PageTitle>
+
+<section class="page-header">
+    <div>
+        <p class="eyebrow">WorkSessions</p>
+        <h1>Jornadas y configuración</h1>
+        <p class="hero-copy">Controla la duración por defecto de la jornada y consulta el histórico reciente.</p>
+    </div>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(_feedback))
+{
+    <div class="banner">@_feedback</div>
+}
+
+<section class="management-grid">
+    <article class="glass-panel form-panel">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Configuración</p>
+                <h2>Duración por defecto</h2>
+            </div>
+        </div>
+
+        <EditForm Model="_configurationDraft" OnValidSubmit="SaveConfigurationAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="field-grid">
+                <label>
+                    <span>Horas por WorkSession</span>
+                    <InputNumber @bind-Value="_configurationDraft.DefaultWorkSessionDurationHours" />
+                </label>
+            </div>
+
+            <div class="action-row">
+                <button class="primary-button" type="submit">Guardar duración</button>
+                @if (_activeSession is null)
+                {
+                    <button class="secondary-button" type="button" @onclick="StartSessionAsync">Iniciar jornada</button>
+                }
+                else
+                {
+                    <button class="secondary-button" type="button" @onclick="StopSessionAsync">Cerrar jornada</button>
+                }
+            </div>
+        </EditForm>
+    </article>
+
+    <article class="glass-panel section-card">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Histórico</p>
+                <h2>Últimas sesiones</h2>
+            </div>
+        </div>
+
+        <div class="table-shell">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Inicio</th>
+                        <th>Fin</th>
+                        <th>Duración prevista</th>
+                        <th>Tareas asociadas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var session in _sessions)
+                    {
+                        <tr>
+                            <td>@session.DateTimeStart.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@(session.DateTimeEnd?.ToString("dd/MM/yyyy HH:mm") ?? "Activa")</td>
+                            <td>@session.ExpectedDurationHours.ToString("0.##") h</td>
+                            <td>@session.Tasks.Count</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
+
+@code {
+    private readonly ConfigurationDraft _configurationDraft = new();
+    private IReadOnlyList<WorkSession> _sessions = [];
+    private WorkSession? _activeSession;
+    private string? _feedback;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _sessions = await WorkspaceService.GetWorkSessionsAsync();
+        _activeSession = _sessions.FirstOrDefault(session => session.DateTimeEnd is null);
+
+        var configuration = await WorkspaceService.GetConfigurationAsync();
+        _configurationDraft.DefaultWorkSessionDurationHours = configuration.DefaultWorkSessionDurationHours;
+    }
+
+    private async Task SaveConfigurationAsync()
+    {
+        await WorkspaceService.UpdateConfigurationAsync(_configurationDraft);
+        _feedback = "Configuración actualizada.";
+        await LoadAsync();
+    }
+
+    private async Task StartSessionAsync()
+    {
+        await WorkspaceService.StartWorkSessionAsync();
+        _feedback = "Nueva WorkSession iniciada.";
+        await LoadAsync();
+    }
+
+    private async Task StopSessionAsync()
+    {
+        await WorkspaceService.StopWorkSessionAsync();
+        _feedback = "WorkSession cerrada.";
+        await LoadAsync();
+    }
+}

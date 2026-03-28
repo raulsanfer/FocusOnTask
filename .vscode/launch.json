@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "FocusOnTask Windows",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build FocusOnTask",
+      "program": "${workspaceFolder}/bin/Debug/net9.0-windows10.0.19041.0/win10-x64/FocusOnTask.exe",
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false,
+      "console": "internalConsole"
+    }
+  ]
+}

@@ -1,0 +1,400 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Microsoft.AspNetCore.Components.WebView</name>
+    </assembly>
+    <members>
+        <member name="T:Microsoft.Extensions.DependencyInjection.ComponentsWebViewServiceCollectionExtensions">
+            <summary>
+            Extensions for adding component webview services to the <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/>.
+            </summary>
+        </member>
+        <member name="M:Microsoft.Extensions.DependencyInjection.ComponentsWebViewServiceCollectionExtensions.AddBlazorWebView(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Adds component webview services to the <paramref name="services"/> collection.
+            </summary>
+            <param name="services">The <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/> to add the component webview services to.</param>
+            <returns></returns>
+        </member>
+        <member name="T:Microsoft.AspNetCore.Components.WebView.FileExtensionContentTypeProvider">
+            <summary>
+            Provides a mapping between file extensions and MIME types.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.FileExtensionContentTypeProvider.#ctor">
+            <summary>
+            Creates a new provider with a set of default mappings.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.FileExtensionContentTypeProvider.#ctor(System.Collections.Generic.IDictionary{System.String,System.String})">
+            <summary>
+            Creates a lookup engine using the provided mapping.
+            It is recommended that the IDictionary instance use StringComparer.OrdinalIgnoreCase.
+            </summary>
+            <param name="mapping"></param>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Components.WebView.FileExtensionContentTypeProvider.Mappings">
+            <summary>
+            The cross reference table of file extensions and content-types.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.FileExtensionContentTypeProvider.TryGetContentType(System.String,System.String@)">
+            <summary>
+            Given a file path, determine the MIME type
+            </summary>
+            <param name="subpath">A file path</param>
+            <param name="contentType">The resulting MIME type</param>
+            <returns>True if MIME type could be determined</returns>
+        </member>
+        <member name="T:Microsoft.AspNetCore.Components.WebView.IContentTypeProvider">
+            <summary>
+            Used to look up MIME types given a file path
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.IContentTypeProvider.TryGetContentType(System.String,System.String@)">
+            <summary>
+            Given a file path, determine the MIME type
+            </summary>
+            <param name="subpath">A file path</param>
+            <param name="contentType">The resulting MIME type</param>
+            <returns>True if MIME type could be determined</returns>
+        </member>
+        <member name="T:Microsoft.AspNetCore.Components.WebView.PageContext">
+             <summary>
+             Represents the services that are scoped to a single page load. Grouping them like this
+             means we don't have to check that each of them are available individually.
+            
+             This has roughly the same role as a circuit in Blazor Server. One key difference is that,
+             for web views, the IPC channel is outside the page context, whereas in Blazor Server,
+             the IPC channel is within the circuit.
+             </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.Services.WebViewNavigationManager.Refresh(System.Boolean)">
+            <inheritdoc />
+        </member>
+        <member name="T:Microsoft.AspNetCore.Components.WebView.WebViewManager">
+            <summary>
+            Manages activities within a web view that hosts Razor components. Platform authors
+            should subclass this to wire up the abstract and protected methods to the APIs of
+            the platform's web view.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.WebViewManager.#ctor(System.IServiceProvider,Microsoft.AspNetCore.Components.Dispatcher,System.Uri,Microsoft.Extensions.FileProviders.IFileProvider,Microsoft.AspNetCore.Components.Web.JSComponentConfigurationStore,System.String)">
+            <summary>
+            Constructs an instance of <see cref="T:Microsoft.AspNetCore.Components.WebView.WebViewManager"/>.
+            </summary>
+            <param name="provider">The <see cref="T:System.IServiceProvider"/> for the application.</param>
+            <param name="dispatcher">A <see cref="P:Microsoft.AspNetCore.Components.WebView.WebViewManager.Dispatcher"/> instance that can marshal calls to the required thread or sync context.</param>
+            <param name="appBaseUri">The base URI for the application. Since this is a webview, the base URI is typically on a private origin such as http://0.0.0.0/ or app://example/</param>
+            <param name="fileProvider">Provides static content to the webview.</param>
+            <param name="jsComponents">Describes configuration for adding, removing, and updating root components from JavaScript code.</param>
+            <param name="hostPageRelativePath">Path to the host page within the <paramref name="fileProvider"/>.</param>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Components.WebView.WebViewManager.Dispatcher">
+            <summary>
+            Gets the <see cref="P:Microsoft.AspNetCore.Components.WebView.WebViewManager.Dispatcher"/> used by this <see cref="T:Microsoft.AspNetCore.Components.WebView.WebViewManager"/> instance.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.WebViewManager.Navigate(System.String)">
+            <summary>
+            Instructs the web view to navigate to the specified location, bypassing any
+            client-side routing.
+            </summary>
+            <param name="url">The URL, which may be absolute or relative to the application root.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.WebViewManager.NavigateCore(System.Uri)">
+            <summary>
+            Instructs the web view to navigate to the specified location, bypassing any
+            client-side routing.
+            </summary>
+            <param name="absoluteUri">The absolute URI.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.WebViewManager.SendMessage(System.String)">
+            <summary>
+            Sends a message to JavaScript code running in the attached web view. This must
+            be forwarded to the Blazor JavaScript code.
+            </summary>
+            <param name="message">The message.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.WebViewManager.AddRootComponentAsync(System.Type,System.String,Microsoft.AspNetCore.Components.ParameterView)">
+            <summary>
+            Adds a root component to the attached page.
+            </summary>
+            <param name="componentType">The type of the root component. This must implement <see cref="T:Microsoft.AspNetCore.Components.IComponent"/>.</param>
+            <param name="selector">The CSS selector describing where in the page the component should be placed.</param>
+            <param name="parameters">Parameters for the component.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.WebViewManager.RemoveRootComponentAsync(System.String)">
+            <summary>
+            Removes a previously-attached root component from the current page.
+            </summary>
+            <param name="selector">The CSS selector describing where in the page the component was placed. This must exactly match the selector provided on an earlier call to <see cref="M:Microsoft.AspNetCore.Components.WebView.WebViewManager.AddRootComponentAsync(System.Type,System.String,Microsoft.AspNetCore.Components.ParameterView)"/>.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.WebViewManager.MessageReceived(System.Uri,System.String)">
+            <summary>
+            Notifies the <see cref="T:Microsoft.AspNetCore.Components.WebView.WebViewManager"/> about a message from JavaScript running within the web view.
+            </summary>
+            <param name="sourceUri">The source URI for the message.</param>
+            <param name="message">The message.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.WebViewManager.TryDispatchAsync(System.Action{System.IServiceProvider})">
+            <summary>
+            Calls the specified <paramref name="workItem"/> asynchronously and passes in the scoped services available to Razor components.
+            This method will not throw any exceptions if it is unable to call the specified <paramref name="workItem"/>, but if it does call it, then exceptions may still be thrown by the <paramref name="workItem"/> itself.
+            </summary>
+            <param name="workItem">The action to call.</param>
+            <returns>Returns a <see cref="T:System.Threading.Tasks.Task"/> representing <c>true</c> if the <paramref name="workItem"/> was called, or <c>false</c> if it was not called because Blazor is not currently running.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="workItem"/> is <c>null</c>.</exception>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.WebViewManager.TryGetResponseContent(System.String,System.Boolean,System.Int32@,System.String@,System.IO.Stream@,System.Collections.Generic.IDictionary{System.String,System.String}@)">
+            <summary>
+            Tries to provide the response content for a given network request.
+            </summary>
+            <param name="uri">The uri of the request</param>
+            <param name="allowFallbackOnHostPage">Whether or not to fallback to the host page.</param>
+            <param name="statusCode">The status code of the response.</param>
+            <param name="statusMessage">The response status message.</param>
+            <param name="content">The response content</param>
+            <param name="headers">The response headers</param>
+            <returns><c>true</c> if the response can be provided; <c>false</c> otherwise.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.WebViewManager.DisposeAsyncCore">
+            <summary>
+            Disposes the current <see cref="T:Microsoft.AspNetCore.Components.WebView.WebViewManager"/> instance.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.WebViewManager.DisposeAsync">
+            <inheritdoc/>
+        </member>
+        <member name="T:Microsoft.AspNetCore.Components.WebView.ArrayBuilder`1">
+             <summary>
+             Implements a list that uses an array of objects to store the elements.
+            
+             This differs from a <see cref="T:System.Collections.Generic.List`1"/> in that
+             it not only grows as required but also shrinks if cleared with significant
+             excess capacity. This makes it useful for component rendering, because
+             components can be long-lived and re-render frequently, with the rendered size
+             varying dramatically depending on the user's navigation in the app.
+             </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.ArrayBuilder`1.#ctor(System.Int32,System.Buffers.ArrayPool{`0})">
+            <summary>
+            Constructs a new instance of <see cref="T:Microsoft.AspNetCore.Components.WebView.ArrayBuilder`1"/>.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Components.WebView.ArrayBuilder`1.Count">
+            <summary>
+            Gets the number of items.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Components.WebView.ArrayBuilder`1.Buffer">
+            <summary>
+            Gets the underlying buffer.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.ArrayBuilder`1.Append(`0@)">
+            <summary>
+            Appends a new item, automatically resizing the underlying array if necessary.
+            </summary>
+            <param name="item">The item to append.</param>
+            <returns>The index of the appended item.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.ArrayBuilder`1.Overwrite(System.Int32,`0@)">
+            <summary>
+            Sets the supplied value at the specified index. The index must be within
+            range for the array.
+            </summary>
+            <param name="index">The index.</param>
+            <param name="value">The value.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.ArrayBuilder`1.RemoveLast">
+            <summary>
+            Removes the last item.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.ArrayBuilder`1.InsertExpensive(System.Int32,`0)">
+            <summary>
+            Inserts the item at the specified index, moving the contents of the subsequent entries along by one.
+            </summary>
+            <param name="index">The index at which the value is to be inserted.</param>
+            <param name="value">The value to insert.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.ArrayBuilder`1.Clear">
+            <summary>
+            Marks the array as empty, also shrinking the underlying storage if it was
+            not being used to near its full capacity.
+            </summary>
+        </member>
+        <member name="T:Microsoft.AspNetCore.Components.WebView.RenderBatchWriter">
+             <summary>
+             Provides a custom binary serializer for <see cref="T:Microsoft.AspNetCore.Components.RenderTree.RenderBatch"/> instances.
+             This is designed with both server-side and client-side perf in mind:
+            
+              * Array-like regions always have a fixed size per entry (even if some entry types
+                don't require as much space as others) so the recipient can index directly.
+              * The indices describing where field data starts, where each string value starts,
+                etc., are written *after* that data, so when writing the data we don't have to
+                compute the locations up front or seek back to an earlier point in the stream.
+                The recipient can only process the data after reading it all into a buffer,
+                so it's no disadvantage for the location info to be at the end.
+              * We only serialize the data that the JS side will need. For example, we don't
+                emit frame sequence numbers, or any representation of nonstring attribute
+                values, or component instances, etc.
+            
+             We don't have or need a .NET reader for this format. We only read it from JS code.
+             </summary>
+        </member>
+        <member name="T:Microsoft.AspNetCore.Components.WebView.ArrayBuilderMemoryStream">
+            <summary>
+            Writeable memory stream backed by a an <see cref="T:Microsoft.AspNetCore.Components.WebView.ArrayBuilder`1"/>.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Components.WebView.ArrayBuilderMemoryStream.CanRead">
+            <inheritdoc />
+        </member>
+        <member name="P:Microsoft.AspNetCore.Components.WebView.ArrayBuilderMemoryStream.CanSeek">
+            <inheritdoc />
+        </member>
+        <member name="P:Microsoft.AspNetCore.Components.WebView.ArrayBuilderMemoryStream.CanWrite">
+            <inheritdoc />
+        </member>
+        <member name="P:Microsoft.AspNetCore.Components.WebView.ArrayBuilderMemoryStream.Length">
+            <inheritdoc />
+        </member>
+        <member name="P:Microsoft.AspNetCore.Components.WebView.ArrayBuilderMemoryStream.Position">
+            <inheritdoc />
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.ArrayBuilderMemoryStream.Seek(System.Int64,System.IO.SeekOrigin)">
+            <inheritdoc />
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.ArrayBuilderMemoryStream.Read(System.Byte[],System.Int32,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.ArrayBuilderMemoryStream.ReadAsync(System.Byte[],System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.ArrayBuilderMemoryStream.Write(System.Byte[],System.Int32,System.Int32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.ArrayBuilderMemoryStream.WriteAsync(System.Byte[],System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.ArrayBuilderMemoryStream.Flush">
+            <inheritdoc />
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.ArrayBuilderMemoryStream.FlushAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.ArrayBuilderMemoryStream.SetLength(System.Int64)">
+            <inheritdoc />
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.ArrayBuilderMemoryStream.Dispose(System.Boolean)">
+            <inheritdoc />
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.ArrayBuilderMemoryStream.DisposeAsync">
+            <inheritdoc />
+        </member>
+        <member name="P:Microsoft.AspNetCore.Components.WebView.Resources.Exception_PathMustStartWithSlash">
+            <summary>The path in '{0}' must start with '/'.</summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Components.WebView.Resources.FormatException_PathMustStartWithSlash(System.Object)">
+            <summary>The path in '{0}' must start with '/'.</summary>
+        </member>
+        <member name="T:Microsoft.AspNetCore.Components.PullFromJSDataStream">
+            <Summary>
+            A stream that pulls each chunk on demand using JavaScript interop. This implementation is used for
+            WebAssembly and WebView applications.
+            </Summary>
+        </member>
+        <member name="T:Microsoft.AspNetCore.Components.TransmitDataStreamToJS">
+            <Summary>
+            A stream that pulls each chunk on demand using JavaScript interop. This implementation is used for
+            WebAssembly and WebView applications.
+            </Summary>
+        </member>
+        <member name="F:Microsoft.AspNetCore.Internal.LinkerFlags.JsonSerialized">
+            <summary>
+            Flags for a member that is JSON (de)serialized.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AspNetCore.Internal.LinkerFlags.Component">
+            <summary>
+            Flags for a component
+            </summary>
+        </member>
+        <member name="F:Microsoft.AspNetCore.Internal.LinkerFlags.JSInvokable">
+            <summary>
+            Flags for a JSInvokable type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.StaticWebAssets.ManifestStaticWebAssetFileProvider.SourceGenerationContext.StaticWebAssetManifest">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.StaticWebAssets.ManifestStaticWebAssetFileProvider.SourceGenerationContext.StaticWebAssetMatch">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.StaticWebAssets.ManifestStaticWebAssetFileProvider.SourceGenerationContext.StaticWebAssetNode">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.StaticWebAssets.ManifestStaticWebAssetFileProvider.SourceGenerationContext.StaticWebAssetPattern">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.StaticWebAssets.ManifestStaticWebAssetFileProvider.SourceGenerationContext.StaticWebAssetPatternArray">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.StaticWebAssets.ManifestStaticWebAssetFileProvider.SourceGenerationContext.DictionaryStringStaticWebAssetNode">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.StaticWebAssets.ManifestStaticWebAssetFileProvider.SourceGenerationContext.IDictionaryStringStaticWebAssetNode">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.StaticWebAssets.ManifestStaticWebAssetFileProvider.SourceGenerationContext.Int32">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.StaticWebAssets.ManifestStaticWebAssetFileProvider.SourceGenerationContext.String">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.StaticWebAssets.ManifestStaticWebAssetFileProvider.SourceGenerationContext.StringArray">
+            <summary>
+            Defines the source generated JSON serialization contract metadata for a given type.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.StaticWebAssets.ManifestStaticWebAssetFileProvider.SourceGenerationContext.Default">
+            <summary>
+            The default <see cref="T:System.Text.Json.Serialization.JsonSerializerContext"/> associated with a default <see cref="T:System.Text.Json.JsonSerializerOptions"/> instance.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.StaticWebAssets.ManifestStaticWebAssetFileProvider.SourceGenerationContext.GeneratedSerializerOptions">
+            <summary>
+            The source-generated options associated with this context.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.StaticWebAssets.ManifestStaticWebAssetFileProvider.SourceGenerationContext.#ctor">
+            <inheritdoc/>
+        </member>
+        <member name="M:Microsoft.AspNetCore.StaticWebAssets.ManifestStaticWebAssetFileProvider.SourceGenerationContext.#ctor(System.Text.Json.JsonSerializerOptions)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Microsoft.AspNetCore.StaticWebAssets.ManifestStaticWebAssetFileProvider.SourceGenerationContext.GetTypeInfo(System.Type)">
+            <inheritdoc/>
+        </member>
+    </members>
+</doc>

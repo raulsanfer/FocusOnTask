@@ -1,0 +1,14 @@
+﻿<Router AppAssembly="@typeof(MauiProgram).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(Layout.MainLayout)">
+            <section class="glass-panel section-card">
+                <h1>Página no encontrada</h1>
+                <p>La ruta que intentas abrir no existe dentro de la aplicación.</p>
+            </section>
+        </LayoutView>
+    </NotFound>
+</Router>

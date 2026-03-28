@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>Microsoft.Maui.Graphics.Win2D.WinUI.Desktop</id>
+    <version>9.0.14</version>
+    <authors>Microsoft</authors>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <icon>Icon.png</icon>
+    <readme>README.md</readme>
+    <projectUrl>https://github.com/dotnet/maui</projectUrl>
+    <description>.NET Multi-platform App UI (.NET MAUI) is a cross-platform framework for creating native mobile and desktop apps with C# and XAML. This package contains additional graphics and drawing APIs for using the Win2D graphics engine with .NET MAUI Graphics. This package is no longer needed and all APIs are now also in the Microsoft.Maui.Graphics package.</description>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+    <tags>dotnet-maui dotnet maui cross-platform ios android macos maccatalyst windows winui tizen graphics drawing win2d</tags>
+    <serviceable>true</serviceable>
+    <repository type="git" url="https://github.com/dotnet/maui.git" commit="85f2a06ecd11e4ba5a9e567d86f9d2fb49a2c5ca" />
+    <dependencies>
+      <group targetFramework="net9.0-windows10.0.19041">
+        <dependency id="Microsoft.Maui.Graphics" version="9.0.14" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Graphics.Win2D" version="1.2.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net9.0-windows10.0.20348">
+        <dependency id="Microsoft.Maui.Graphics" version="9.0.14" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Graphics.Win2D" version="1.2.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>
