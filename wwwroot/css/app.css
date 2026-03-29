@@ -380,6 +380,102 @@ textarea {
     align-items: end;
 }
 
+.task-title-cell {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    min-width: 0;
+}
+
+.task-title-copy {
+    display: grid;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.task-title-copy small,
+.subtask-tags,
+.nested-empty {
+    color: rgba(210, 221, 232, 0.64);
+}
+
+.row-toggle,
+.row-toggle-placeholder {
+    width: 1.9rem;
+    flex: 0 0 1.9rem;
+}
+
+.row-toggle {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #eef4fb;
+    cursor: pointer;
+    padding: 0.2rem 0;
+}
+
+.row-toggle-placeholder {
+    display: inline-block;
+}
+
+.nested-row td {
+    padding-top: 0;
+    border-bottom: 0;
+}
+
+.nested-panel {
+    margin: 0.25rem 0 0.85rem;
+    padding: 1rem 1rem 1rem 2.9rem;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.nested-heading {
+    margin-bottom: 0.85rem;
+}
+
+.nested-heading h3 {
+    margin-bottom: 0;
+}
+
+.nested-table-shell {
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(9, 13, 20, 0.34);
+}
+
+.nested-table th,
+.nested-table td {
+    vertical-align: top;
+}
+
+.subtask-description {
+    min-width: 220px;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(6, 9, 14, 0.72);
+}
+
+.modal-card {
+    width: min(760px, 100%);
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+}
+
+.modal-card textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
 .empty-table-cell {
     color: rgba(210, 221, 232, 0.64);
     text-align: center;
@@ -486,6 +582,20 @@ td {
     }
 
     .task-filter-actions .secondary-button {
+        width: 100%;
+    }
+
+    .nested-panel {
+        padding-left: 1rem;
+    }
+
+    .row-toggle,
+    .row-toggle-placeholder {
+        width: 1.6rem;
+        flex-basis: 1.6rem;
+    }
+
+    .modal-card {
         width: 100%;
     }
 

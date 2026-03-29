@@ -27,7 +27,7 @@ public sealed class FocusWorkspaceService(IDbContextFactory<FocusOnTaskDbContext
             : await db.Tasks
                 .AsNoTracking()
                 .Where(task => task.WorkSessionId == activeSession.Id && task.Status == TaskState.Started)
-                .Select(task => task.Title)
+                .Select(task => task.Description != null && task.Description != string.Empty ? task.Description : task.Title)
                 .FirstOrDefaultAsync();
 
         var configuration = await db.AppConfigurations.AsNoTracking().SingleAsync();
@@ -57,7 +57,7 @@ public sealed class FocusWorkspaceService(IDbContextFactory<FocusOnTaskDbContext
             .Select(task => new TaskSnapshot
             {
                 Id = task.Id,
-                Title = task.Title,
+                Title = task.Description != null && task.Description != string.Empty ? task.Description : task.Title,
                 ProjectName = task.Project != null ? task.Project.Name : null,
                 Status = task.Status,
                 EstimationHours = task.EstimationHours,
@@ -115,12 +115,24 @@ public sealed class FocusWorkspaceService(IDbContextFactory<FocusOnTaskDbContext
         await EnsureInitializedAsync();
         await using var db = await dbContextFactory.CreateDbContextAsync();
 
-        return await db.Tasks
+        var tasks = await db.Tasks
             .AsNoTracking()
+            .Where(task => task.ParentTaskId == null)
             .Include(task => task.Project)
+            .Include(task => task.Subtasks)
             .OrderBy(task => task.Status == TaskState.Started ? 0 : task.Status == TaskState.Stopped ? 1 : task.Status == TaskState.NotStarted ? 2 : 3)
             .ThenByDescending(task => task.LastStatusChange)
             .ToListAsync();
+
+        foreach (var task in tasks)
+        {
+            task.Subtasks = task.Subtasks
+                .OrderBy(item => item.Status == TaskState.Started ? 0 : item.Status == TaskState.Stopped ? 1 : item.Status == TaskState.NotStarted ? 2 : 3)
+                .ThenByDescending(item => item.LastStatusChange)
+                .ToList();
+        }
+
+        return tasks;
     }
 
     public async Task<IReadOnlyList<WorkSession>> GetWorkSessionsAsync()
@@ -175,15 +187,58 @@ public sealed class FocusWorkspaceService(IDbContextFactory<FocusOnTaskDbContext
             var activeSession = draft.AttachToActiveSession
                 ? await db.WorkSessions.SingleOrDefaultAsync(session => session.DateTimeEnd == null)
                 : null;
+            var now = DateTime.Now;
+            var title = draft.Title.Trim();
 
             db.Tasks.Add(new TaskItem
             {
-                Title = draft.Title.Trim(),
+                Title = title,
+                Description = title,
+                DateTimeCreated = now,
                 ProjectId = draft.ProjectId,
                 EstimationHours = decimal.Round(draft.EstimationHours, 2, MidpointRounding.AwayFromZero),
                 Status = TaskState.NotStarted,
                 WorkSessionId = activeSession?.Id,
-                LastStatusChange = DateTime.Now
+                LastStatusChange = now
+            });
+
+            await db.SaveChangesAsync();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task AddSubtaskAsync(int parentTaskId, SubtaskDraft draft)
+    {
+        await EnsureInitializedAsync();
+        await _gate.WaitAsync();
+
+        try
+        {
+            await using var db = await dbContextFactory.CreateDbContextAsync();
+            var parentTask = await db.Tasks.SingleOrDefaultAsync(item => item.Id == parentTaskId);
+            if (parentTask is null || parentTask.ParentTaskId is not null)
+            {
+                return;
+            }
+
+            var now = DateTime.Now;
+            var description = draft.Description.Trim();
+            var tags = string.IsNullOrWhiteSpace(draft.Tags) ? null : draft.Tags.Trim();
+
+            db.Tasks.Add(new TaskItem
+            {
+                Title = description,
+                Description = description,
+                Tags = tags,
+                DateTimeCreated = now,
+                ParentTaskId = parentTask.Id,
+                ProjectId = parentTask.ProjectId,
+                EstimationHours = decimal.Round(draft.EstimationHours, 2, MidpointRounding.AwayFromZero),
+                Status = TaskState.NotStarted,
+                LastStatusChange = now
             });
 
             await db.SaveChangesAsync();
@@ -398,13 +453,27 @@ public sealed class FocusWorkspaceService(IDbContextFactory<FocusOnTaskDbContext
         try
         {
             await using var db = await dbContextFactory.CreateDbContextAsync();
-            var task = await db.Tasks.SingleOrDefaultAsync(item => item.Id == taskId);
-            if (task is null)
+            if (!await db.Tasks.AnyAsync(item => item.Id == taskId))
             {
                 return;
             }
 
-            db.Tasks.Remove(task);
+            var taskIds = await GetTaskIdsForDeletionAsync(db, taskId);
+            var sessionLogs = await db.TaskSessionLogs
+                .Where(log => taskIds.Contains(log.TaskItemId))
+                .ToListAsync();
+
+            if (sessionLogs.Count != 0)
+            {
+                db.TaskSessionLogs.RemoveRange(sessionLogs);
+            }
+
+            var tasks = await db.Tasks
+                .Where(task => taskIds.Contains(task.Id))
+                .OrderByDescending(task => task.ParentTaskId.HasValue ? 1 : 0)
+                .ToListAsync();
+
+            db.Tasks.RemoveRange(tasks);
             await db.SaveChangesAsync();
         }
         finally
@@ -430,6 +499,7 @@ public sealed class FocusWorkspaceService(IDbContextFactory<FocusOnTaskDbContext
     {
         await using var db = await dbContextFactory.CreateDbContextAsync();
         await db.Database.EnsureCreatedAsync();
+        await EnsureTaskSchemaAsync(db);
     }
 
     private static void CloseActiveSegment(TaskItem task, WorkSession session, DateTime endedAt, TaskState nextStatus, FocusOnTaskDbContext db)
@@ -452,5 +522,96 @@ public sealed class FocusWorkspaceService(IDbContextFactory<FocusOnTaskDbContext
         task.ActiveSegmentStart = null;
         task.LastStatusChange = endedAt;
         task.Status = nextStatus;
+    }
+
+    private static async Task EnsureTaskSchemaAsync(FocusOnTaskDbContext db)
+    {
+        var taskColumns = await GetTableColumnsAsync(db, "Tasks");
+
+        if (!taskColumns.Contains("Description"))
+        {
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Tasks ADD COLUMN Description TEXT NULL");
+        }
+
+        if (!taskColumns.Contains("Tags"))
+        {
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Tasks ADD COLUMN Tags TEXT NULL");
+        }
+
+        if (!taskColumns.Contains("DateTimeCreated"))
+        {
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Tasks ADD COLUMN DateTimeCreated TEXT NULL");
+        }
+
+        if (!taskColumns.Contains("ParentTaskId"))
+        {
+            await db.Database.ExecuteSqlRawAsync("ALTER TABLE Tasks ADD COLUMN ParentTaskId INTEGER NULL");
+        }
+
+        await db.Database.ExecuteSqlRawAsync("UPDATE Tasks SET Description = COALESCE(NULLIF(Description, ''), Title)");
+        await db.Database.ExecuteSqlRawAsync("UPDATE Tasks SET DateTimeCreated = COALESCE(DateTimeCreated, DateTimeStart, LastStatusChange, CURRENT_TIMESTAMP)");
+        await db.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_Tasks_ParentTaskId ON Tasks (ParentTaskId)");
+    }
+
+    private static async Task<HashSet<string>> GetTableColumnsAsync(FocusOnTaskDbContext db, string tableName)
+    {
+        var connection = db.Database.GetDbConnection();
+        var shouldCloseConnection = connection.State != System.Data.ConnectionState.Open;
+
+        if (shouldCloseConnection)
+        {
+            await connection.OpenAsync();
+        }
+
+        try
+        {
+            await using var command = connection.CreateCommand();
+            command.CommandText = $"PRAGMA table_info('{tableName}')";
+
+            await using var reader = await command.ExecuteReaderAsync();
+            var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            while (await reader.ReadAsync())
+            {
+                columns.Add(reader.GetString(reader.GetOrdinal("name")));
+            }
+
+            return columns;
+        }
+        finally
+        {
+            if (shouldCloseConnection)
+            {
+                await connection.CloseAsync();
+            }
+        }
+    }
+
+    private static async Task<List<int>> GetTaskIdsForDeletionAsync(FocusOnTaskDbContext db, int rootTaskId)
+    {
+        var pendingIds = new Queue<int>();
+        var collectedIds = new HashSet<int>();
+        pendingIds.Enqueue(rootTaskId);
+
+        while (pendingIds.Count > 0)
+        {
+            var currentId = pendingIds.Dequeue();
+            if (!collectedIds.Add(currentId))
+            {
+                continue;
+            }
+
+            var childIds = await db.Tasks
+                .Where(task => task.ParentTaskId == currentId)
+                .Select(task => task.Id)
+                .ToListAsync();
+
+            foreach (var childId in childIds)
+            {
+                pendingIds.Enqueue(childId);
+            }
+        }
+
+        return [.. collectedIds];
     }
 }

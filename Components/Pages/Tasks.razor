@@ -8,7 +8,7 @@
     <div>
         <p class="eyebrow">Tasks</p>
         <h1>Cola de trabajo</h1>
-        <p class="hero-copy">Crea tareas, asígnalas a proyectos y controla el estado real del trabajo.</p>
+        <p class="hero-copy">Crea tareas, abre subtareas y controla el tiempo real sin tocar la planificacion original.</p>
     </div>
 </section>
 
@@ -22,7 +22,7 @@
         <div class="section-heading">
             <div>
                 <p class="eyebrow">Nueva tarea</p>
-                <h2>Captura rápida</h2>
+                <h2>Captura rapida</h2>
             </div>
         </div>
 
@@ -33,26 +33,26 @@
 
                 <div class="field-grid quick-task-fields">
                     <label class="task-title-field">
-                    <span>Título</span>
-                    <InputText @bind-Value="_taskDraft.Title" />
+                        <span>Titulo</span>
+                        <InputText @bind-Value="_taskDraft.Title" />
                     </label>
                     <label>
-                    <span>Proyecto</span>
-                    <InputSelect @bind-Value="_taskDraft.ProjectId">
-                        <option value="">Sin proyecto</option>
-                        @foreach (var project in _projects)
-                        {
-                            <option value="@project.Id">@project.Name</option>
-                        }
-                    </InputSelect>
+                        <span>Proyecto</span>
+                        <InputSelect @bind-Value="_taskDraft.ProjectId">
+                            <option value="">Sin proyecto</option>
+                            @foreach (var project in _projects)
+                            {
+                                <option value="@project.Id">@project.Name</option>
+                            }
+                        </InputSelect>
                     </label>
                     <label>
-                    <span>Estimación (horas)</span>
-                    <InputNumber @bind-Value="_taskDraft.EstimationHours" />
+                        <span>Estimacion (horas)</span>
+                        <InputNumber @bind-Value="_taskDraft.EstimationHours" />
                     </label>
                     <label class="toggle-field">
-                    <InputCheckbox @bind-Value="_taskDraft.AttachToActiveSession" />
-                    <span>Adjuntar a la sesión activa si existe</span>
+                        <InputCheckbox @bind-Value="_taskDraft.AttachToActiveSession" />
+                        <span>Adjuntar a la sesion activa si existe</span>
                     </label>
                 </div>
             </div>
@@ -63,7 +63,7 @@
 
     <article class="glass-panel section-card">
         @{
-            var filteredTasks = FilteredTasks;
+            var filteredTaskRows = FilteredTaskRows;
         }
 
         <div class="section-heading">
@@ -71,13 +71,13 @@
                 <p class="eyebrow">Listado</p>
                 <h2>Tareas registradas</h2>
             </div>
-            <p class="section-meta">@filteredTasks.Count de @_tasks.Count tareas</p>
+            <p class="section-meta">@filteredTaskRows.Count de @_tasks.Count tareas principales · @TotalSubtaskCount subtareas</p>
         </div>
 
         <div class="field-grid task-filters">
             <label class="task-filter-search">
-                <span>Buscar por nombre</span>
-                <input @bind="_taskSearch" @bind:event="oninput" placeholder="Escribe parte del nombre" />
+                <span>Buscar por nombre o tags</span>
+                <input @bind="_taskSearch" @bind:event="oninput" placeholder="Escribe parte del nombre o una etiqueta" />
             </label>
             <label>
                 <span>Estado</span>
@@ -109,16 +109,16 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Título</th>
+                        <th>Titulo</th>
                         <th>Proyecto</th>
                         <th>Estado</th>
-                        <th>Estimación</th>
+                        <th>Estimacion</th>
                         <th>Trabajado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if (filteredTasks.Count == 0)
+                    @if (filteredTaskRows.Count == 0)
                     {
                         <tr>
                             <td colspan="6" class="empty-table-cell">No hay tareas que coincidan con los filtros actuales.</td>
@@ -126,32 +126,132 @@
                     }
                     else
                     {
-                        @foreach (var task in filteredTasks)
+                        @foreach (var row in filteredTaskRows)
                         {
-                            <tr>
-                                <td>@task.Title</td>
+                            var task = row.Task;
+                            var isExpanded = ShouldExpandTask(row);
+                            var subtaskSummary = BuildSubtaskSummary(row);
+
+                            <tr class="task-parent-row">
+                                <td>
+                                    <div class="task-title-cell">
+                                        @if (task.Subtasks.Count != 0)
+                                        {
+                                            <button class="row-toggle" type="button" @onclick="() => ToggleTaskExpansion(task.Id)" aria-expanded="@isExpanded" aria-label="Mostrar subtareas de @task.DisplayName">
+                                                @(isExpanded ? "v" : ">")
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="row-toggle-placeholder"></span>
+                                        }
+
+                                        <div class="task-title-copy">
+                                            <strong>@task.DisplayName</strong>
+                                            @if (!string.IsNullOrWhiteSpace(subtaskSummary))
+                                            {
+                                                <small>@subtaskSummary</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
                                 <td>@(task.Project?.Name ?? "Sin proyecto")</td>
                                 <td><span class="status-chip @task.Status.ToCssClass()">@task.Status.ToDisplayName()</span></td>
                                 <td>@task.EstimationHours.ToString("0.##") h</td>
                                 <td>@task.WorkedHours.ToString("0.##") h</td>
                                 <td>
                                     <div class="action-row">
+                                        <button class="mini-button ghost" type="button" @onclick="() => OpenSubtaskModal(task)">Nueva subtarea</button>
                                         @if (task.Status != TaskState.Completed)
                                         {
-                                            <button class="mini-button" @onclick="() => StartTaskAsync(task.Id)">Iniciar</button>
+                                            <button class="mini-button" type="button" @onclick="() => StartTaskAsync(task.Id)">Iniciar</button>
                                         }
                                         @if (task.Status == TaskState.Started)
                                         {
-                                            <button class="mini-button ghost" @onclick="() => PauseTaskAsync(task.Id)">Parar</button>
+                                            <button class="mini-button ghost" type="button" @onclick="() => PauseTaskAsync(task.Id)">Parar</button>
                                         }
                                         @if (task.Status != TaskState.Completed)
                                         {
-                                            <button class="mini-button ghost" @onclick="() => CompleteTaskAsync(task.Id)">Finalizar</button>
+                                            <button class="mini-button ghost" type="button" @onclick="() => CompleteTaskAsync(task.Id)">Finalizar</button>
                                         }
-                                        <button class="mini-button ghost" type="button" @onclick="() => DeleteTaskAsync(task.Id, task.Title)">Eliminar</button>
+                                        <button class="mini-button ghost" type="button" @onclick="() => DeleteTaskAsync(task.Id, task.DisplayName, task.Subtasks.Count != 0, task.Subtasks.Count)">Eliminar</button>
                                     </div>
                                 </td>
                             </tr>
+
+                            @if (task.Subtasks.Count != 0 && isExpanded)
+                            {
+                                <tr class="nested-row">
+                                    <td colspan="6">
+                                        <div class="nested-panel">
+                                            <div class="section-heading nested-heading">
+                                                <div>
+                                                    <p class="eyebrow">Subtareas</p>
+                                                    <h3>@task.DisplayName</h3>
+                                                </div>
+                                                <p class="section-meta">@BuildSubtaskCounter(row)</p>
+                                            </div>
+
+                                            @if (row.VisibleSubtasks.Count == 0)
+                                            {
+                                                <p class="nested-empty">No hay subtareas visibles con los filtros actuales.</p>
+                                            }
+                                            else
+                                            {
+                                                <div class="table-shell nested-table-shell">
+                                                    <table class="nested-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Descripcion</th>
+                                                                <th>Tags</th>
+                                                                <th>Creada</th>
+                                                                <th>Inicio</th>
+                                                                <th>Fin</th>
+                                                                <th>Estado</th>
+                                                                <th>Estimacion</th>
+                                                                <th>Trabajado</th>
+                                                                <th>Acciones</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach (var subtask in row.VisibleSubtasks)
+                                                            {
+                                                                <tr>
+                                                                    <td class="subtask-description">@subtask.DisplayName</td>
+                                                                    <td class="subtask-tags">@(string.IsNullOrWhiteSpace(subtask.Tags) ? "-" : subtask.Tags)</td>
+                                                                    <td>@FormatDateTime(subtask.DateTimeCreated)</td>
+                                                                    <td>@FormatDateTime(subtask.DateTimeStart)</td>
+                                                                    <td>@FormatDateTime(subtask.DateTimeEnd)</td>
+                                                                    <td><span class="status-chip @subtask.Status.ToCssClass()">@subtask.Status.ToDisplayName()</span></td>
+                                                                    <td>@subtask.EstimationHours.ToString("0.##") h</td>
+                                                                    <td>@subtask.WorkedHours.ToString("0.##") h</td>
+                                                                    <td>
+                                                                        <div class="action-row">
+                                                                            @if (subtask.Status != TaskState.Completed)
+                                                                            {
+                                                                                <button class="mini-button" type="button" @onclick="() => StartTaskAsync(subtask.Id)">Iniciar</button>
+                                                                            }
+                                                                            @if (subtask.Status == TaskState.Started)
+                                                                            {
+                                                                                <button class="mini-button ghost" type="button" @onclick="() => PauseTaskAsync(subtask.Id)">Parar</button>
+                                                                            }
+                                                                            @if (subtask.Status != TaskState.Completed)
+                                                                            {
+                                                                                <button class="mini-button ghost" type="button" @onclick="() => CompleteTaskAsync(subtask.Id)">Finalizar</button>
+                                                                            }
+                                                                            <button class="mini-button ghost" type="button" @onclick="() => DeleteTaskAsync(subtask.Id, subtask.DisplayName)">Eliminar</button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            }
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
                         }
                     }
                 </tbody>
@@ -160,6 +260,47 @@
     </article>
 </section>
 
+@if (_isSubtaskModalOpen && _subtaskParentTask is not null)
+{
+    <div class="modal-backdrop" @onclick="CloseSubtaskModal">
+        <div class="modal-card glass-panel" @onclick:stopPropagation="true">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Nueva subtarea</p>
+                    <h2>Subtarea para @_subtaskParentTask.DisplayName</h2>
+                    <p class="muted-copy">Solo se crea un nivel de subtarea. La fecha de creacion se registra automaticamente al guardar.</p>
+                </div>
+                <button class="mini-button ghost" type="button" @onclick="CloseSubtaskModal">Cerrar</button>
+            </div>
+
+            <EditForm Model="_subtaskDraft" OnValidSubmit="CreateSubtaskAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="field-grid">
+                    <label class="field-span">
+                        <span>Descripcion</span>
+                        <InputTextArea @bind-Value="_subtaskDraft.Description" />
+                    </label>
+                    <label class="field-span">
+                        <span>Tags</span>
+                        <InputText @bind-Value="_subtaskDraft.Tags" placeholder="Ejemplo: mejora ui, bug, ajuste fino" />
+                    </label>
+                    <label>
+                        <span>Estimacion (horas)</span>
+                        <InputNumber @bind-Value="_subtaskDraft.EstimationHours" />
+                    </label>
+                </div>
+
+                <div class="action-row">
+                    <button class="primary-button" type="submit">Guardar subtarea</button>
+                    <button class="secondary-button" type="button" @onclick="CloseSubtaskModal">Cancelar</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
 @code {
     private readonly TaskDraft _taskDraft = new()
     {
@@ -167,25 +308,36 @@
         AttachToActiveSession = true
     };
 
+    private readonly SubtaskDraft _subtaskDraft = new()
+    {
+        EstimationHours = 1m
+    };
+
     private const string NoProjectFilterValue = "__none__";
 
     private IReadOnlyList<Project> _projects = [];
     private IReadOnlyList<TaskItem> _tasks = [];
+    private readonly HashSet<int> _expandedTaskIds = [];
     private string _taskSearch = string.Empty;
     private TaskState? _statusFilter;
     private string? _projectFilter;
     private string? _feedback;
+    private bool _isSubtaskModalOpen;
+    private TaskItem? _subtaskParentTask;
 
     private static IReadOnlyList<TaskState> AvailableStatuses { get; } = Enum.GetValues<TaskState>();
 
-    private IReadOnlyList<TaskItem> FilteredTasks =>
+    private int TotalSubtaskCount => _tasks.Sum(task => task.Subtasks.Count);
+
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(_taskSearch)
+        || _statusFilter.HasValue
+        || !string.IsNullOrWhiteSpace(_projectFilter);
+
+    private IReadOnlyList<TaskRow> FilteredTaskRows =>
         _tasks
-            .Where(task => string.IsNullOrWhiteSpace(_taskSearch)
-                || task.Title.Contains(_taskSearch.Trim(), StringComparison.OrdinalIgnoreCase))
-            .Where(task => !_statusFilter.HasValue || task.Status == _statusFilter.Value)
-            .Where(task => string.IsNullOrWhiteSpace(_projectFilter)
-                || (_projectFilter == NoProjectFilterValue && task.ProjectId is null)
-                || (_projectFilter != NoProjectFilterValue && task.ProjectId?.ToString() == _projectFilter))
+            .Select(BuildTaskRow)
+            .OfType<TaskRow>()
             .ToList();
 
     protected override async Task OnInitializedAsync()
@@ -212,37 +364,57 @@
         await LoadAsync();
     }
 
+    private async Task CreateSubtaskAsync()
+    {
+        if (_subtaskParentTask is null)
+        {
+            return;
+        }
+
+        var parentTaskId = _subtaskParentTask.Id;
+        await WorkspaceService.AddSubtaskAsync(parentTaskId, _subtaskDraft);
+        _expandedTaskIds.Add(parentTaskId);
+        _feedback = "Subtarea creada.";
+        CloseSubtaskModal();
+        await LoadAsync();
+    }
+
     private async Task StartTaskAsync(int taskId)
     {
         await WorkspaceService.StartTaskAsync(taskId);
-        _feedback = "Tarea iniciada.";
+        _feedback = "Trabajo iniciado.";
         await LoadAsync();
     }
 
     private async Task PauseTaskAsync(int taskId)
     {
         await WorkspaceService.PauseTaskAsync(taskId);
-        _feedback = "Tarea parada.";
+        _feedback = "Trabajo parado.";
         await LoadAsync();
     }
 
     private async Task CompleteTaskAsync(int taskId)
     {
         await WorkspaceService.CompleteTaskAsync(taskId);
-        _feedback = "Tarea finalizada.";
+        _feedback = "Trabajo finalizado.";
         await LoadAsync();
     }
 
-    private async Task DeleteTaskAsync(int taskId, string taskTitle)
+    private async Task DeleteTaskAsync(int taskId, string taskTitle, bool includeChildren = false, int childCount = 0)
     {
-        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Se eliminara permanentemente la tarea \"{taskTitle}\". Esta accion no se puede deshacer. ¿Quieres continuar?");
+        var confirmationMessage = includeChildren && childCount != 0
+            ? $"Se eliminara permanentemente la tarea \"{taskTitle}\" junto con sus {childCount} subtareas. Esta accion no se puede deshacer. Quieres continuar?"
+            : $"Se eliminara permanentemente la tarea \"{taskTitle}\". Esta accion no se puede deshacer. Quieres continuar?";
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", confirmationMessage);
         if (!confirmed)
         {
             return;
         }
 
         await WorkspaceService.DeleteTaskAsync(taskId);
-        _feedback = "Tarea eliminada permanentemente.";
+        _expandedTaskIds.Remove(taskId);
+        _feedback = "Elemento eliminado permanentemente.";
         await LoadAsync();
     }
 
@@ -252,4 +424,89 @@
         _statusFilter = null;
         _projectFilter = null;
     }
+
+    private void ToggleTaskExpansion(int taskId)
+    {
+        if (!_expandedTaskIds.Add(taskId))
+        {
+            _expandedTaskIds.Remove(taskId);
+        }
+    }
+
+    private void OpenSubtaskModal(TaskItem task)
+    {
+        if (task.IsSubtask)
+        {
+            return;
+        }
+
+        ResetSubtaskDraft();
+        _subtaskParentTask = task;
+        _isSubtaskModalOpen = true;
+    }
+
+    private void CloseSubtaskModal()
+    {
+        _isSubtaskModalOpen = false;
+        _subtaskParentTask = null;
+        ResetSubtaskDraft();
+    }
+
+    private void ResetSubtaskDraft()
+    {
+        _subtaskDraft.Description = string.Empty;
+        _subtaskDraft.Tags = string.Empty;
+        _subtaskDraft.EstimationHours = 1m;
+    }
+
+    private TaskRow? BuildTaskRow(TaskItem task)
+    {
+        var parentMatches = MatchesFilters(task);
+        var visibleSubtasks = task.Subtasks
+            .Where(MatchesFilters)
+            .ToList();
+
+        return parentMatches || visibleSubtasks.Count != 0
+            ? new TaskRow(task, parentMatches, visibleSubtasks)
+            : null;
+    }
+
+    private bool MatchesFilters(TaskItem task) => MatchesSearch(task) && MatchesState(task) && MatchesProject(task);
+
+    private bool MatchesSearch(TaskItem task)
+    {
+        var search = _taskSearch.Trim();
+        if (string.IsNullOrWhiteSpace(search))
+        {
+            return true;
+        }
+
+        return task.DisplayName.Contains(search, StringComparison.OrdinalIgnoreCase)
+            || (!string.IsNullOrWhiteSpace(task.Tags) && task.Tags.Contains(search, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private bool MatchesState(TaskItem task) => !_statusFilter.HasValue || task.Status == _statusFilter.Value;
+
+    private bool MatchesProject(TaskItem task) =>
+        string.IsNullOrWhiteSpace(_projectFilter)
+        || (_projectFilter == NoProjectFilterValue && task.ProjectId is null)
+        || (_projectFilter != NoProjectFilterValue && task.ProjectId?.ToString() == _projectFilter);
+
+    private bool ShouldExpandTask(TaskRow row) =>
+        _expandedTaskIds.Contains(row.Task.Id)
+        || (HasActiveFilters && row.VisibleSubtasks.Count != 0);
+
+    private static string FormatDateTime(DateTime? value) => value?.ToString("dd/MM/yyyy HH:mm") ?? "-";
+
+    private static string BuildSubtaskCounter(TaskRow row) =>
+        row.VisibleSubtasks.Count == row.Task.Subtasks.Count
+            ? $"{row.Task.Subtasks.Count} subtareas"
+            : $"{row.VisibleSubtasks.Count} de {row.Task.Subtasks.Count} subtareas";
+
+    private static string? BuildSubtaskSummary(TaskRow row) =>
+        row.Task.Subtasks.Count == 0
+            ? null
+            : BuildSubtaskCounter(row);
+
+    private sealed record TaskRow(TaskItem Task, bool ParentMatches, IReadOnlyList<TaskItem> VisibleSubtasks);
 }

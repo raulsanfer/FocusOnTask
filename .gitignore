@@ -5,6 +5,7 @@
 [Ll]ogs/
 artifacts/
 publish/
+publish/win-x64/
 TestResults/
 AppPackages/
 BundleArtifacts/

@@ -29,7 +29,15 @@ public sealed class FocusOnTaskDbContext(DbContextOptions<FocusOnTaskDbContext> 
 
         modelBuilder.Entity<TaskItem>()
             .Property(task => task.Title)
-            .HasMaxLength(140);
+            .HasMaxLength(280);
+
+        modelBuilder.Entity<TaskItem>()
+            .Property(task => task.Description)
+            .HasMaxLength(280);
+
+        modelBuilder.Entity<TaskItem>()
+            .Property(task => task.Tags)
+            .HasMaxLength(400);
 
         modelBuilder.Entity<TaskItem>()
             .HasOne(task => task.Project)
@@ -42,6 +50,15 @@ public sealed class FocusOnTaskDbContext(DbContextOptions<FocusOnTaskDbContext> 
             .WithMany(workSession => workSession.Tasks)
             .HasForeignKey(task => task.WorkSessionId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<TaskItem>()
+            .HasOne(task => task.ParentTask)
+            .WithMany(task => task.Subtasks)
+            .HasForeignKey(task => task.ParentTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TaskItem>()
+            .HasIndex(task => task.ParentTaskId);
 
         modelBuilder.Entity<TaskSessionLog>()
             .HasOne(log => log.TaskItem)
